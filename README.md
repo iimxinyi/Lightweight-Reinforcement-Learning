@@ -16,4 +16,4 @@ pip install torch==2.4.1
 
 ### Test Environment
 
-For Single Agent Deep Reinforcement Learning, we use "CartPole-v1".
+For Single Agent Deep Reinforcement Learning(SADRL), we use "CartPole-v1".
