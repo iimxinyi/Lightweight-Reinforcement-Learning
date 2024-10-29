@@ -21,6 +21,6 @@ For Single Agent Deep Reinforcement Learning (SADRL), we use "CartPole-v1".
 
 URL: https://gymnasium.farama.org/environments/classic_control/cart_pole/
 
-For Multi Agent Deep Reinforcement Learning (MADRK), wu use "PettingZoo-SimpleSpread".
+For Multi Agent Deep Reinforcement Learning (MADRL), wu use "PettingZoo-SimpleSpread".
 
 URL: https://pettingzoo.farama.org/environments/mpe/simple_spread/
