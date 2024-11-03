@@ -18,14 +18,13 @@ def seed_everywhere(seed):
 def train(para):
     # env = simple_spread_v3.parallel_env(N=para.num_agent, local_ratio=0.5, max_cycles=25, continuous_actions=False, render_mode='human')
     env = simple_spread_v3.parallel_env(N=para.num_agent, local_ratio=0.5, max_cycles=25, continuous_actions=False)
-
     all_observation_dim = [env.observation_space(f'agent_{i}').shape[0] for i in range(para.num_agent)]
     all_action_dim = [env.action_space(f'agent_{i}').n for i in range(para.num_agent)]
     observation_dim = all_observation_dim[0]
     action_dim = all_action_dim[0]
     state_dim = np.sum(all_observation_dim)
 
-    agent = MAPPO(para, para.STEP, para.num_agent, observation_dim, state_dim, action_dim)
+    mappo_agent = MAPPO(para, para.STEP, para.num_agent, observation_dim, state_dim, action_dim)
 
     reward_norm = Normalization(dimension=para.num_agent) if para.use_reward_norm else None
     reward_scaling = RewardScaling(dimension=para.num_agent, gamma=para.gamma) if para.use_reward_scaling else None
@@ -36,26 +35,30 @@ def train(para):
     for episode in range(para.EPISODE):
         reward_step = []
         all_observation_dict, _ = env.reset(seed=para.SEED)
+        # =====Convert to our standard form ⬇️=====
         all_observation = [observation for observation in all_observation_dict.values()]
+        # =====Convert to our standard form ⬆️=====
         
         reward_scaling.reset() if para.use_reward_scaling else None
 
         for step in range(para.STEP):
-            all_action, all_action_logprob = agent.choose_action(all_observation)
+            all_action, all_action_logprob = mappo_agent.choose_action(all_observation)
             state = np.array(all_observation).flatten()
-            all_state_value = agent.get_state_value(state)
+            all_state_value = mappo_agent.get_state_value(state)
+            # =====Convert to our standard form ⬇️=====
             all_action_dist = {f'agent_{i}': all_action[i] for i in range(para.num_agent)}
             all_next_observation_dict, all_reward_dict, all_done_dict, all_truncated_dict, _ = env.step(all_action_dist)
             all_next_observation = [observation for observation in all_next_observation_dict.values()]
             all_reward = [reward for reward in all_reward_dict.values()]
             all_done = [done for done in all_done_dict.values()]
             all_truncated = [True] * len(all_truncated_dict) if step == para.STEP else [truncated for truncated in all_truncated_dict.values()]
+            # =====Convert to our standard form ⬆️=====
 
             reward_step.append(np.mean(all_reward))
 
             all_reward = reward_norm(all_reward) if para.use_reward_norm else (reward_scaling(all_reward) if para.use_reward_scaling else all_reward)
 
-            agent.replay_buffer.store(step, all_observation, state, all_state_value, all_action, all_action_logprob, all_reward, all_done, all_truncated)
+            mappo_agent.replay_buffer.store(step, all_observation, state, all_state_value, all_action, all_action_logprob, all_reward, all_done, all_truncated)
 
             all_observation = all_next_observation
             total_steps += 1
@@ -63,12 +66,12 @@ def train(para):
             if all(all_done) or all(all_truncated): break
 
         state = np.array(all_observation).flatten()
-        all_state_value = agent.get_state_value(state)
-        agent.replay_buffer.store_last_state_value(all_state_value)
+        all_state_value = mappo_agent.get_state_value(state)
+        mappo_agent.replay_buffer.store_last_state_value(all_state_value)
         total_episodes += 1
 
         if total_episodes > para.mini_batch_size and episode % para.update_frequency == 0:
-            agent.update(update_steps)
+            mappo_agent.update(update_steps)
             update_steps += 1
 
         #===================Save and Print Reward per Episode===================
