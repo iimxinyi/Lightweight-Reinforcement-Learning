@@ -108,8 +108,8 @@ if __name__ == '__main__':
         'learning_rate': 5e-4,  # Learning rate of the actor and critic
         'gamma': 0.99,  # Discount factor
         'lamda': 0.95,  # GAE parameter
-        'epsilon': 0.2,  # MAPPO clip parameter
-        'K_epochs': 1,  # MAPPO parameter
+        'epsilon': 0.2,  # IPPO clip parameter
+        'K_epochs': 1,  # IPPO parameter
         'use_adv_norm': True,  # Trick 1: Advantage normalization
         'use_observation_norm': False,  # Trick 2: Observation normalization
         'use_reward_norm': False,  # Trick 3: Reward normalization
